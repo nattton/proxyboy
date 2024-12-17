@@ -2,7 +2,7 @@
   "store_path": "./store",
   "router_list": [
     {
-      "method": "get,post,post,patch,delete",
+      "method": "get,post,patch,put,delete",
       "url": "/home",
       "file": "/home/home.json"
     }
