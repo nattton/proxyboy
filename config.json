@@ -1,0 +1,10 @@
+{
+  "store_path": "./store",
+  "router_list": [
+    {
+      "method": "get,post,post,patch,delete",
+      "url": "/home",
+      "file": "/home/home.json"
+    }
+  ]
+}
