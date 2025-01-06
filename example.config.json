@@ -1,10 +1,13 @@
 {
   "store_path": "./store",
+  "mode": "",
   "router_list": [
     {
       "method": "get,post,patch,put,delete",
       "url": "/home",
-      "file": "/home/home.json"
+      "file": "/home/home.json",
+      "status_code": 200,
+      "delay": 2000
     }
   ]
 }
