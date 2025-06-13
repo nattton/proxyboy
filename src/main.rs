@@ -53,7 +53,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/parse_token", post(parse_token))
-        .route("/*path", any(handler))
+        .route("/{*path}", any(handler))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
 
