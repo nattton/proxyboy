@@ -3,12 +3,18 @@
   "mode": "",
   "router_list": [
     {
-      "method": "get,post,patch,put,delete",
+      "method": "get",
       "url": "/home",
+      "file": "/home/home.html",
+      "content_type": "text/html"
+    },
+    {
+      "method": "get,post,patch,put,delete",
+      "url": "/home.json",
       "file": "/home/home.json",
       "status_code": 200,
-      "delay": 2000,
-      "enable": true
+      "delay": 1000,
+      "content_type": "application/json"
     }
   ]
 }
