@@ -1,4 +1,6 @@
 /target
+.env
+/database.db
 config.json
 /store/*
 !/store/home
