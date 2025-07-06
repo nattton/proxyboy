@@ -3,6 +3,7 @@
 diesel::table! {
     mocks (id) {
         id -> Integer,
+        name -> Text,
         is_enable -> Bool,
         request_method -> Text,
         request_url -> Text,

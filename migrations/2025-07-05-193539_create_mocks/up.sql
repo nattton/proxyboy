@@ -1,5 +1,6 @@
 CREATE TABLE mocks (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
     is_enable BOOLEAN NOT NULL DEFAULT 1,
     request_method TEXT NOT NULL DEFAULT '*',
     request_url TEXT NOT NULL,

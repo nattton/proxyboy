@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use dotenvy::dotenv;
-use proxyboy::{establish_connection, schema::mocks::dsl::*};
+use proxyboy::{establish_connection, import, schema::mocks::dsl::*};
 use std::{env, fmt::format, fs, thread::sleep, time::Duration};
 
 use axum::{
@@ -40,6 +40,20 @@ impl IntoResponse for ApiError {
 
 #[tokio::main]
 async fn main() {
+    // Check for import command
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "import" {
+        println!("Importing config.json to database...");
+        match import::import_config() {
+            Ok(()) => println!("Import completed successfully!"),
+            Err(e) => {
+                eprintln!("Import failed: {}", e);
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
     // initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -70,7 +84,7 @@ fn response(headers: &HeaderMap, method: &str, path: String) -> Result<Response,
                 .like(format!("%{}%", method))
                 .or(request_method.eq("*")),
         )
-        .filter(request_url.like(format!("%{}%", path_url)))
+        .filter(request_url.like(format!("%{}", path_url)))
         .first::<Mock>(&mut conn)
         .optional()
         .expect("Error loading mocks");

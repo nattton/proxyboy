@@ -5,6 +5,20 @@ use diesel::prelude::*;
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Mock {
     pub id: i32,
+    pub name: String,
+    pub is_enable: bool,
+    pub request_method: String,
+    pub request_url: String,
+    pub response_file_path: String,
+    pub response_status_code: i32,
+    pub response_delay: i32,
+    pub response_content_type: String,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::mocks)]
+pub struct InsertMock {
+    pub name: String,
     pub is_enable: bool,
     pub request_method: String,
     pub request_url: String,
