@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use dotenvy::dotenv;
-use proxyboy::{establish_connection, import, schema::mocks::dsl::*};
+use proxyboy::{establish_connection, import, models::InsertLog, schema::logs::dsl::*};
 use std::{collections::HashMap, env, fmt::format, fs, thread::sleep, time::Duration};
 
 use axum::{
@@ -80,19 +80,8 @@ async fn main() {
 
 fn response(method: &str, path: String) -> Result<Response, ApiError> {
     let path_url = path.strip_prefix('/').unwrap_or(&path);
-
     let mut conn = establish_connection();
-    let mock = mocks
-        .filter(is_enable.eq(true))
-        .filter(
-            request_method
-                .like(format!("%{}%", method))
-                .or(request_method.eq("*")),
-        )
-        .filter(request_url.like(format!("%{}", path_url)))
-        .first::<Mock>(&mut conn)
-        .optional()
-        .expect("Error loading mocks");
+    let mock = Mock::find_by_method_and_url(method, path_url, &mut conn);
 
     match mock {
         Some(mock) => {
@@ -146,6 +135,28 @@ fn print_request(
         println!("{}\t\t{:?}", header.0, header.1);
     }
     println!("### End Headers ###");
+    println!("--------------------------------");
+    let mut conn = establish_connection();
+    let log = InsertLog {
+        request_method: method.to_string(),
+        request_url: path.to_string(),
+        request_params: params
+            .iter()
+            .map(|(k, v)| format!("{}: {}", k, v))
+            .collect::<Vec<String>>()
+            .join(", "),
+        request_body: body.to_string(),
+        request_headers: headers
+            .iter()
+            .map(|(k, v)| format!("{}: {}", k, v.to_str().unwrap_or("")))
+            .collect::<Vec<String>>()
+            .join("\n"),
+    };
+    diesel::insert_into(logs)
+        .values(&log)
+        .execute(&mut conn)
+        .unwrap();
+    println!("Log inserted successfully!");
     println!("--------------------------------");
 }
 

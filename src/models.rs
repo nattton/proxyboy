@@ -1,3 +1,4 @@
+use crate::schema::mocks::dsl::*;
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable)]
@@ -15,6 +16,27 @@ pub struct Mock {
     pub response_content_type: String,
 }
 
+impl Mock {
+    pub fn find_by_method_and_url(
+        method: &str,
+        url: &str,
+        conn: &mut SqliteConnection,
+    ) -> Option<Mock> {
+        let mock = mocks
+            .filter(is_enable.eq(true))
+            .filter(
+                request_method
+                    .like(format!("%{}%", method))
+                    .or(request_method.eq("*")),
+            )
+            .filter(request_url.like(format!("%{}", url)))
+            .first::<Mock>(conn)
+            .optional()
+            .expect("Error loading mocks");
+        mock
+    }
+}
+
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::mocks)]
 pub struct InsertMock {
@@ -26,4 +48,14 @@ pub struct InsertMock {
     pub response_status_code: i32,
     pub response_delay: i32,
     pub response_content_type: String,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::logs)]
+pub struct InsertLog {
+    pub request_method: String,
+    pub request_url: String,
+    pub request_params: String,
+    pub request_body: String,
+    pub request_headers: String,
 }

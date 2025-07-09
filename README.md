@@ -4,9 +4,10 @@ Mock api server
 
 ## Setup Config
 
-rename example.config.json => config.json
+rename example.env => .env
+rename example.database.db => database.db
 
-### (Optional) create .env file
+### edit .env file
 
 `SERVER_ADDR=0.0.0.0:3000`
 `DATABASE_URL=PATH_TO_FILE`
