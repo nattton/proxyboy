@@ -1,13 +1,13 @@
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use proxyboy::{establish_connection, import, schema::mocks::dsl::*};
-use std::{env, fmt::format, fs, thread::sleep, time::Duration};
+use std::{collections::HashMap, env, fmt::format, fs, thread::sleep, time::Duration};
 
 use axum::{
-    extract::Path,
+    extract::{Path, Query},
     http::{header, HeaderMap, Method, StatusCode},
     response::IntoResponse,
-    routing::any,
+    routing::get,
     Router,
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -59,7 +59,14 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/{*path}", any(handler))
+        .route(
+            "/{*path}",
+            get(handler)
+                .post(handler)
+                .put(handler)
+                .delete(handler)
+                .patch(handler),
+        )
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
 
@@ -71,9 +78,7 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-fn response(headers: &HeaderMap, method: &str, path: String) -> Result<Response, ApiError> {
-    let host = headers.get("host").unwrap().to_str().unwrap_or("");
-    println!("### Request ###\t{}\t{}\t{}", method, host, path);
+fn response(method: &str, path: String) -> Result<Response, ApiError> {
     let path_url = path.strip_prefix('/').unwrap_or(&path);
 
     let mut conn = establish_connection();
@@ -118,26 +123,42 @@ fn response(headers: &HeaderMap, method: &str, path: String) -> Result<Response,
     }
 }
 
-fn print_request(method: &Method, path: &str, headers: &HeaderMap, body: &str) {
+fn print_request(
+    method: &Method,
+    path: &str,
+    headers: &HeaderMap,
+    body: &str,
+    params: &HashMap<String, String>,
+) {
+    let host = headers.get("host").unwrap().to_str().unwrap_or("");
+    println!("--------------------------------");
     println!("### Method ###\t{}", method);
+    println!("### Host ###\t{}", host);
     println!("### Path ###\t{}", path);
+    if !params.is_empty() {
+        println!("### Params ###\t{:?}", params);
+    }
+    if !body.is_empty() {
+        println!("### Body ###\t{}", body);
+    }
     println!("### Headers ###");
     for header in headers.iter() {
         println!("{}\t\t{:?}", header.0, header.1);
     }
     println!("### End Headers ###");
-    println!("### Body ###\t{}", body);
+    println!("--------------------------------");
 }
 
 async fn handler(
     method: Method,
     Path(path): Path<String>,
+    Query(params): Query<HashMap<String, String>>,
     headers: HeaderMap,
     body: String,
 ) -> impl IntoResponse {
-    print_request(&method, &path, &headers, &body);
+    print_request(&method, &path, &headers, &body, &params);
 
-    match response(&headers, method.as_str(), path) {
+    match response(method.as_str(), path) {
         Ok(response) => (
             response.status_code,
             [(header::CONTENT_TYPE, response.content_type)],
